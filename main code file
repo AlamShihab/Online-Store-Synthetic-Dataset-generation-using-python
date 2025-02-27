@@ -1,0 +1,366 @@
+###############################
+###############################
+#Importing Libray
+###############################
+
+
+import pandas as pd
+import numpy as np
+import random
+import string
+from datetime import datetime, timedelta
+from google.colab import files
+
+# Set seeds for reproducibility
+random.seed(42)
+np.random.seed(42)
+
+
+#########################################################################################################################################################################################
+#########################
+# Generate Customers Data
+#########################
+n_customers = 100000
+
+def generate_customer_id(index):
+    prefix = random.choice(["CUS", "ID", "CLT", "USR"])  # Realistic prefixes
+    random_digits = ''.join(random.choices(string.digits, k=5))  # Random 5-digit number
+    return f"{prefix}-{random_digits}-{index:06d}"  # Unique ID format
+
+
+customer_ids = [generate_customer_id(i) for i in range(1, n_customers + 1)]
+
+first_names = [
+    # American Names
+    "John", "Jane", "Alex", "Alice", "Bob", "Carol", "Mike", "Sara", "David", "Emma",
+    "Ethan", "Olivia", "Liam", "Sophia", "James", "Isabella", "Benjamin", "Mia", "Lucas", "Charlotte",
+    "Noah", "Emily", "Jacob", "Madison", "Daniel", "Ava", "Matthew", "Chloe", "Joseph", "Ella",
+    "Andrew", "Grace", "Ryan", "Hannah", "Nicholas", "Lily", "Tyler", "Megan", "Brandon", "Lauren",
+    "Mason", "Scarlett", "Henry", "Violet", "Elijah", "Abigail", "Samuel", "Harper", "Logan", "Victoria",
+
+    # Indian Names
+    "Aarav", "Aanya", "Vihaan", "Anaya", "Rohan", "Ishita", "Aditya", "Priya", "Rahul", "Sneha",
+    "Siddharth", "Neha", "Arjun", "Meera", "Krishna", "Kavya", "Dev", "Pooja", "Kiran", "Ritika",
+    "Nikhil", "Tanvi", "Harsh", "Swati", "Rajat", "Nisha", "Manish", "Deepika", "Vikas", "Sonal",
+    "Suresh", "Aditi", "Kunal", "Bhavna", "Ramesh", "Anjali", "Vivek", "Shalini", "Ravi", "Simran",
+    "Yash", "Divya", "Akhil", "Shruti", "Varun", "Preeti", "Suraj", "Nandini", "Arvind", "Ekta",
+
+    # Bangladeshi Names
+    "Shihab", "Titas", "Tanvir", "Mahi", "Fahim", "Nusrat", "Hasan", "Raihan", "Mim", "Sadia",
+    "Nayeem", "Sultana", "Amin", "Shamima", "Rakib", "Shila", "Tanjim", "Farzana", "Rony", "Jannat",
+    "Jahid", "Fariha", "Rafi", "Tasnim", "Sakib", "Farhan", "Sumaiya", "Shuvo", "Morshed", "Afia",
+    "Nazmul", "Afrin", "Imran", "Parveen", "Ashfaq", "Momena", "Habib", "Sumon", "Mahmuda", "Rashid",
+    "Rasel", "Naila", "Shahriar", "Dilruba", "Zubair", "Lamisa", "Mamun", "Humaira", "Towhid", "Sabila",
+
+    # Arabic Names
+    "Omar", "Aisha", "Mohammed", "Fatima", "Ali", "Layla", "Hassan", "Zainab", "Ibrahim", "Noor",
+    "Amir", "Maryam", "Yusuf", "Sara", "Tariq", "Huda", "Khalid", "Nadia", "Faisal", "Salma",
+    "Zayd", "Samira", "Abdul", "Rania", "Mahmoud", "Hana", "Jamil", "Zara", "Nasser", "Karima",
+    "Bashir", "Rami", "Tamer", "Wafa", "Younes", "Lubna", "Saif", "Maha", "Taha", "Amina",
+    "Rashid", "Lama", "Waleed", "Yasmeen", "Sami", "Mariam", "Hakeem", "Dalia", "Kareem", "Samah",
+
+    # Australian Names
+    "Jack", "Ruby", "Charlie", "Matilda", "Cooper", "Ella", "Hudson", "Willow", "Lachlan", "Evie",
+    "Tyler", "Zoe", "Oscar", "Freya", "Harry", "Imogen", "Eli", "Scarlett", "Nathan", "Harper",
+    "Declan", "Poppy", "Finn", "Mackenzie", "Xavier", "Summer", "Jayden", "Amelia", "Blake", "Sienna",
+    "Bailey", "Jasmine", "Kai", "Tahlia", "Cody", "Paige", "Ethan", "Chelsea", "Angus", "Holly",
+    "Levi", "Sasha", "Ryder", "Annabelle", "Jordan", "Mikayla", "Zane", "Natalie", "Travis", "Isla",
+
+    # European Names
+    "Luca", "Amelie", "Matteo", "Sofia", "Julian", "Elena", "Felix", "Clara", "Leon", "Camille",
+    "Dominic", "Lucia", "Sebastian", "Marie", "Nicolas", "Isabelle", "Samuel", "Chloe", "Oliver", "Gabrielle",
+    "Johan", "Theresa", "Bjorn", "Elise", "Marius", "Anouk", "Hans", "Greta", "Viktor", "Leonie",
+    "Casper", "Nina", "Tobias", "Frederika", "Maxime", "Helena", "Dieter", "Sabine", "Hugo", "Saskia",
+    "Franz", "Lisette", "Jens", "Brigitte", "Andreas", "Ivana", "Stefan", "Milena", "Frederic", "Anastasia",
+
+    # African Names
+    "Kwame", "Amina", "Obi", "Fatou", "Jabari", "Zuri", "Kofi", "Adama", "Ndidi", "Tunde",
+    "Omari", "Amara", "Nia", "Sefu", "Makena", "Chidi", "Ebele", "Zuberi", "Ifunanya", "Tariq",
+    "Jengo", "Safiya", "Taye", "Abeba", "Kwesi", "Zahara", "Bantu", "Marjani", "Obasi", "Kito",
+    "Zuberi", "Shani", "Dayo", "Femi", "Jelani", "Chike", "Halima", "Tau", "Eshe", "Ndalo",
+    "Bongani", "Zanele", "Thabo", "Nomsa", "Kabelo", "Lerato", "Tsepo", "Mpho", "Xolani", "Sipho"
+]
+
+last_names = [
+    # American Last Names
+    "Smith", "Johnson", "Williams", "Jones", "Brown", "Davis", "Miller", "Wilson", "Moore", "Taylor",
+    "Anderson", "Thomas", "Jackson", "White", "Harris", "Martin", "Thompson", "Garcia", "Martinez", "Roberts",
+    "Walker", "Perez", "Hall", "Young", "Allen", "Sanchez", "Wright", "King", "Scott", "Green",
+
+    # Indian Last Names
+    "Patel", "Sharma", "Gupta", "Singh", "Reddy", "Desai", "Mehta", "Iyer", "Nair", "Kumar",
+    "Chowdhury", "Bose", "Sen", "Rao", "Chopra", "Verma", "Saxena", "Jain", "Naidu", "Malhotra",
+    "Pandey", "Shukla", "Kaur", "Dubey", "Yadav", "Bhat", "Saini", "Chawla", "Aggarwal", "Ghosh",
+
+    # Bangladeshi Last Names
+    "Hossain", "Ahmed", "Islam", "Chowdhury", "Rahman", "Sarker", "Khan", "Mollah", "Sharif", "Mia",
+    "Rashid", "Nayeem", "Sultana", "Kabir", "Mohiuddin", "Munir", "Mollah", "Jahan", "Shah", "Uddin",
+    "Jabbar", "Faruk", "Tareq", "Zaman", "Choudhury", "Mirza", "Ali", "Siddique", "Khan", "Naser",
+
+    # Arabic Last Names
+    "Al-Farsi", "Al-Mansoori", "Al-Hassan", "Al-Sharif", "Al-Sabah", "Al-Amiri", "Al-Khalifa", "Al-Banna", "Al-Mahdi", "Al-Jabari",
+    "Bin Mohammed", "Abdul Rahman", "Al-Bashir", "Al-Fahad", "Al-Saleh", "Al-Rashid", "Al-Amin", "Al-Baqer", "Al-Qassim", "Al-Sayed",
+    "Al-Mutlaq", "Al-Naimi", "Al-Saadi", "Al-Mahmood", "Al-Zahra", "Al-Hamdan", "Al-Hakeem", "Al-Ghamdi", "Al-Khuwaildi", "Al-Fuad",
+
+    # Australian Last Names
+    "Smith", "Williams", "Brown", "Jones", "Taylor", "Wilson", "Thompson", "Martinez", "Lee", "Young",
+    "Miller", "Davis", "Harris", "Clark", "King", "Evans", "Scott", "Roberts", "Nelson", "Adams",
+    "Cooper", "Parker", "Wright", "Hall", "Allen", "Green", "Carter", "Campbell", "Baker", "Murphy",
+
+    # European Last Names
+    "Schmidt", "Müller", "Bauer", "Fischer", "Weber", "Hoffmann", "Schneider", "Zimmermann", "Schulz", "Maier",
+    "Meier", "Wagner", "Becker", "Hermann", "Lang", "Koch", "Schwarz", "Richter", "Klein", "Wolf",
+    "Neumann", "Schulte", "Braun", "Lange", "Jäger", "Vogel", "Peters", "Weiss", "Hahn", "Schwarz",
+
+    # African Last Names
+    "Okafor", "Sokoto", "Tshabalala", "Osei", "Nguyen", "Tsegaye", "Kante", "Mokoena", "Hassan", "Musa",
+    "Banda", "Jalloh", "Nwankwo", "Adams", "Kwame", "Toure", "Rama", "Akinyele", "Dlamini", "Diallo",
+    "Moyo", "Gumede", "Chirwa", "Sefu", "Ifeanyi", "Chikeka", "Mahomed", "Masamba", "Kibwana", "Tariq",
+    "Zuberi", "Raji", "Babatunde", "Suleiman", "Kumi", "Sani", "Juma", "Mbatha", "Munyai", "Makgoba"
+]
+
+########################
+#Countries and cities
+########################
+
+
+countries = [
+    "USA", "UK", "Canada", "Australia", "Germany", "France", "India", "Japan", "China", "Brazil",
+    "Russia", "South Korea", "Mexico", "Italy", "Spain", "South Africa", "Nigeria", "Egypt", "Turkey",
+    "Argentina", "Thailand", "Saudi Arabia", "Pakistan", "Indonesia", "Vietnam", "Poland", "Colombia",
+    "Malaysia", "Singapore", "Philippines", "Romania", "Bangladesh", "Chile", "Morocco", "Israel",
+    "Ukraine", "Kazakhstan", "Sweden", "Norway", "Denmark", "Finland", "Czech Republic", "Greece", "Belgium",
+    "Switzerland", "Austria", "Portugal", "Ireland", "New Zealand", "Egypt", "UAE", "Peru", "Iraq", "Belarus",
+    "Kuwait", "Qatar", "Sri Lanka", "Nepal", "Hong Kong", "Bulgaria", "Croatia", "Serbia", "Estonia", "Latvia",
+    "Lithuania", "Slovakia", "Hungary", "Slovenia", "Algeria", "Tunisia", "Jordan", "Oman", "Lebanon",
+    "Panama", "Costa Rica", "Guatemala", "Ecuador", "Paraguay", "Bolivia", "Honduras", "El Salvador", "Kenya",  "Lithuania"
+    ]
+
+cities = {
+    "USA": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "Austin"],
+    "UK": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Liverpool", "Sheffield", "Edinburgh", "Bristol", "Cardiff"],
+    "Canada": ["Toronto", "Vancouver", "Montreal", "Ottawa", "Calgary", "Edmonton", "Quebec City", "Winnipeg", "Hamilton", "Kitchener"],
+    "Australia": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Hobart", "Darwin", "Canberra", "Newcastle"],
+    "Germany": ["Berlin", "Munich", "Frankfurt", "Hamburg", "Cologne", "Düsseldorf", "Stuttgart", "Dortmund", "Leipzig", "Bremen"],
+    "France": ["Paris", "Marseille", "Lyon", "Toulouse", "Nice", "Nantes", "Strasbourg", "Montpellier", "Bordeaux", "Lille"],
+    "India": ["Delhi", "Mumbai", "Kolkata", "Chennai", "Bangalore", "Hyderabad", "Ahmedabad", "Pune", "Jaipur", "Lucknow"],
+    "Japan": ["Tokyo", "Osaka", "Kyoto", "Hokkaido", "Fukuoka", "Kobe", "Nagoya", "Sapporo", "Sendai", "Nagasaki"],
+    "China": ["Beijing", "Shanghai", "Shenzhen", "Guangzhou", "Chengdu", "Hangzhou", "Wuhan", "Xi'an", "Suzhou", "Chongqing"],
+    "Brazil": ["São Paulo", "Rio de Janeiro", "Brasília", "Salvador", "Fortaleza", "Belo Horizonte", "Manaus", "Curitiba", "Recife", "Porto Alegre"],
+    "Russia": ["Moscow", "Saint Petersburg", "Novosibirsk", "Yekaterinburg", "Nizhny Novgorod", "Samara", "Omsk", "Kazan", "Chelyabinsk", "Rostov-on-Don"],
+    "South Korea": ["Seoul", "Busan", "Incheon", "Daegu", "Daejeon", "Gwangju", "Ulsan", "Suwon", "Gyeongju", "Jeju"],
+    "Mexico": ["Mexico City", "Guadalajara", "Monterrey", "Cancún", "Tijuana", "Puebla", "Mérida", "Leon", "Chihuahua", "Toluca"],
+    "Italy": ["Rome", "Milan", "Naples", "Turin", "Florence", "Bologna", "Venice", "Palermo", "Genoa", "Catania"],
+    "Spain": ["Madrid", "Barcelona", "Valencia", "Seville", "Zaragoza", "Málaga", "Murcia", "Palma", "Las Palmas", "Bilbao"],
+    "South Africa": ["Johannesburg", "Cape Town", "Durban", "Pretoria", "Port Elizabeth", "Bloemfontein", "East London", "Polokwane", "Nelspruit", "Kimberley"],
+    "Nigeria": ["Lagos", "Abuja", "Kano", "Ibadan", "Port Harcourt", "Benin City", "Kaduna", "Maiduguri", "Zaria", "Aba"],
+    "Egypt": ["Cairo", "Alexandria", "Giza", "Sharm El Sheikh", "Luxor", "Aswan", "Port Said", "Suez", "Tanta", "Ismailia"],
+    "Turkey": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana", "Konya", "Gaziantep", "Mersin", "Eskisehir"],
+    "Argentina": ["Buenos Aires", "Córdoba", "Rosario", "Mendoza", "Tucumán", "La Plata", "Mar del Plata", "San Juan", "Salta", "Santa Fe"],
+    "Thailand": ["Bangkok", "Chiang Mai", "Phuket", "Pattaya", "Ayutthaya", "Nakhon Ratchasima", "Chiang Rai", "Hua Hin", "Khon Kaen", "Songkhla"],
+    "Saudi Arabia": ["Riyadh", "Jeddah", "Mecca", "Medina", "Dammam", "Khobar", "Tabuk", "Buraidah", "Khamis Mushait", "Najran"],
+    "Pakistan": ["Karachi", "Lahore", "Islamabad", "Rawalpindi", "Faisalabad", "Multan", "Peshawar", "Quetta", "Sialkot", "Gujranwala"],
+    "Indonesia": ["Jakarta", "Surabaya", "Bandung", "Medan", "Yogyakarta", "Makassar", "Palembang", "Semarang", "Malang", "Bali"],
+    "Vietnam": ["Hanoi", "Ho Chi Minh City", "Da Nang", "Haiphong", "Can Tho", "Bien Hoa", "Hue", "Nha Trang", "Vinh", "Thanh Hoa"],
+    "Poland": ["Warsaw", "Kraków", "Wrocław", "Poznań", "Gdańsk", "Łódź", "Katowice", "Szczecin", "Lublin", "Bydgoszcz"],
+    "Colombia": ["Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Bucaramanga", "Pereira", "Santa Marta", "Cúcuta", "Manizales"],
+    "Malaysia": ["Kuala Lumpur", "George Town", "Johor Bahru", "Ipoh", "Shah Alam", "Melaka", "Kota Kinabalu", "Kuching", "Seremban", "Alor Setar"],
+    "Singapore": ["Singapore"],
+    "Philippines": ["Manila", "Cebu City", "Davao City", "Quezon City", "Makati", "Taguig", "Iloilo", "Zamboanga", "Baguio", "Angeles City"],
+    "Romania": ["Bucharest", "Cluj-Napoca", "Timișoara", "Iași", "Constanța", "Craiova", "Brașov", "Galați", "Pitești", "Sibiu"],
+    "Bangladesh": ["Dhaka", "Chittagong", "Khulna", "Rajshahi", "Sylhet", "Barisal", "Rangpur", "Mymensingh", "Narayanganj", "Narsingdi"],
+    "Chile": ["Santiago", "Valparaíso", "Concepción", "La Serena", "Antofagasta", "Temuco", "Rancagua", "Iquique", "Puerto Montt", "Talca"],
+    "Morocco": ["Casablanca", "Rabat", "Marrakech", "Fes", "Tangier", "Agadir", "Meknes", "Oujda", "Tetouan", "El Jadida"],
+    "Israel": ["Tel Aviv", "Jerusalem", "Haifa", "Eilat", "Nazareth", "Beer Sheva", "Acre", "Tiberias", "Herzliya", "Petah Tikva"],
+    "Ukraine": ["Kyiv", "Kharkiv", "Odesa", "Lviv", "Dnipro", "Zaporizhzhia", "Donetsk", "Luhansk", "Mariupol", "Simferopol"],
+    "Kazakhstan": ["Almaty", "Nur-Sultan", "Shymkent", "Karaganda", "Aktobe", "Taraz", "Pavlodar", "Kostanay", "Semey", "Kyzylorda"],
+    "Sweden": ["Stockholm", "Gothenburg", "Malmö", "Uppsala", "Västerås", "Örebro", "Linköping", "Helsingborg", "Norrköping", "Jönköping"],
+    "Norway": ["Oslo", "Bergen", "Stavanger", "Drammen", "Tromsø", "Kristiansand", "Sandnes", "Bodø", "Ålesund", "Hamar"],
+    "Denmark": ["Copenhagen", "Aarhus", "Odense", "Aalborg", "Esbjerg", "Randers", "Kolding", "Vejle", "Horsens", "Herning"],
+    "Finland": ["Helsinki", "Espoo", "Tampere", "Vantaa", "Oulu", "Turku", "Jyväskylä", "Lahti", "Pori", "Rovaniemi"],
+    "Czech Republic": ["Prague", "Brno", "Ostrava", "Plzeň", "Liberec", "Olomouc", "Hradec Králové", "Pardubice", "Zlín", "Ústí nad Labem"],
+     "Lithuania": ["Vilnius", "Kaunas", "Klaipėda", "Šiauliai", "Panevėžys"]
+}
+
+customer_data = []
+start_date = datetime(2015, 1, 1)
+end_date = datetime(2023, 12, 31)
+date_range = (end_date - start_date).days
+
+# Create customers DataFrame
+customers_df = pd.DataFrame({
+    "CustomerID": customer_ids,
+    "FirstName": random.choices(first_names, k=n_customers),
+    "LastName": random.choices(last_names, k=n_customers),
+
+})
+
+# Example of adding Email, Country, and City columns
+customers_df["Email"] = [f"{first_name.lower()}.{last_name.lower()}@9mail.com" for first_name, last_name in zip(customers_df["FirstName"], customers_df["LastName"])]
+customers_df["Country"] = random.choices(countries, k=n_customers)
+customers_df["City"] = customers_df["Country"].apply(lambda country: random.choice(cities.get(country, ["Unknown"])))
+
+
+#Introduce missing emails (Simulate data cleaning requirement)
+missing_email_indices = np.random.choice(customers_df.index, size=int(0.01 * n_customers), replace=False)
+customers_df.loc[missing_email_indices, "Email"] = np.nan
+
+customers_csv = "customers.csv"
+customers_df.to_csv(customers_csv, index=False)
+files.download(customers_csv)
+
+
+################################################################################################################################################################
+####################
+# Generate Products Data
+####################
+# Number of products
+n_products = 200
+product_ids = [f"P{str(i).zfill(4)}" for i in range(1, n_products+1)]
+
+# Define categories and corresponding product names with logical prices
+category_products = {
+    "Electronics": {"items": ["Smartphone", "Laptop", "Smartwatch", "Tablet", "Bluetooth Speaker", "Wireless Headphones", "Gaming Console", "Drone", "Camera", "Monitor"], "price_range": (100, 2000)},
+    "Clothing": {"items": ["T-Shirt", "Jeans", "Jacket", "Sneakers", "Sweater", "Dress", "Hoodie", "Scarf", "Gloves", "Socks"], "price_range": (10, 200)},
+    "Home": {"items": ["Sofa", "Coffee Table", "Blender", "Microwave", "Vacuum Cleaner", "Curtains", "Dining Table", "Chair", "Bed", "Lamp"], "price_range": (50, 1500)},
+    "Sports": {"items": ["Football", "Basketball", "Running Shoes", "Tennis Racket", "Dumbbells", "Yoga Mat", "Cycling Helmet", "Golf Club", "Badminton Shuttlecock", "Boxing Gloves"], "price_range": (15, 500)},
+    "Toys": {"items": ["Lego Set", "Remote Control Car", "Dollhouse", "Puzzle", "Board Game", "Action Figure", "Toy Train", "Stuffed Animal", "Rubik's Cube", "Water Gun"], "price_range": (5, 100)},
+    "Beauty": {"items": ["Lipstick", "Foundation", "Eyeliner", "Perfume", "Face Cream", "Shampoo", "Hair Dryer", "Nail Polish", "Sunscreen", "Makeup Brush Set"], "price_range": (5, 150)},
+    "Automotive": {"items": ["Car Battery", "Engine Oil", "Car Cover", "Jump Starter", "Tire Inflator", "Car Seat Cover", "Steering Wheel Cover", "GPS Navigator", "Dash Cam", "Car Vacuum Cleaner"], "price_range": (20, 500)},
+    "Books": {"items": ["Novel", "Science Fiction", "History Book", "Cookbook", "Self-Help Book", "Travel Guide", "Comic Book", "Biography", "Textbook", "Poetry Collection"], "price_range": (5, 50)},
+    "Groceries": {"items": ["Milk", "Eggs", "Bread", "Rice", "Pasta", "Cooking Oil", "Vegetables", "Fruits", "Cereal", "Juice"], "price_range": (1, 20)},
+    "Furniture": {"items": ["Wardrobe", "Bookshelf", "Desk", "Office Chair", "Dresser", "Nightstand", "TV Stand", "Shoe Rack", "Recliner", "Folding Table"], "price_range": (100, 2000)}
+}
+
+# Generate category, product names, and logical prices
+categories = random.choices(list(category_products.keys()), k=n_products)
+product_names = []
+prices = []
+
+for category in categories:
+    product = random.choice(category_products[category]["items"])
+    price_range = category_products[category]["price_range"]
+    price = np.round(np.random.uniform(price_range[0], price_range[1]), 2)
+    product_names.append(product)
+    prices.append(price)
+
+# Create DataFrame
+products_df = pd.DataFrame({
+    "ProductID": product_ids,
+    "ProductName": product_names,
+    "Category": categories,
+    "Price": prices
+})
+
+# Save and download CSV
+products_csv = "products.csv"
+products_df.to_csv(products_csv, index=False)
+
+################################################################################################################################################################
+###########################
+# Generate Orders Data
+###########################
+n_orders = 10000000
+
+# Generate Order IDs
+order_ids = [f"O{str(i).zfill(7)}" for i in range(1, n_orders+1)]
+
+# Date range setup
+start_date = datetime(2024, 1, 1)
+end_date = datetime(2024, 12, 31)
+date_range = (end_date - start_date).days
+
+# Simulating sales spike in November and December
+order_dates = []
+for _ in range(n_orders):
+    if random.random() < 0.3:  # 30% of orders in Nov-Dec
+        order_dates.append(datetime(2024, 11, random.randint(1, 30)))
+    elif random.random() < 0.5:  # 50% of remaining orders in Q4
+        order_dates.append(datetime(2024, random.randint(9, 12), random.randint(1, 28)))
+    else:  # Remaining orders spread across other months
+        order_dates.append(start_date + timedelta(days=random.randint(0, date_range)))
+
+# Prioritize Electronics, Beauty, Automotive, and top-selling Books
+high_demand_categories = ["Electronics", "Beauty", "Automotive"]
+top_books = ["Self-Help Book", "Comic Book", "Novel"]
+
+# Define categories and corresponding product names with logical prices
+category_products = { # Define category_products within the scope
+    "Electronics": {"items": ["Smartphone", "Laptop", "Smartwatch", "Tablet", "Bluetooth Speaker", "Wireless Headphones", "Gaming Console", "Drone", "Camera", "Monitor"], "price_range": (100, 2000)},
+    "Clothing": {"items": ["T-Shirt", "Jeans", "Jacket", "Sneakers", "Sweater", "Dress", "Hoodie", "Scarf", "Gloves", "Socks"], "price_range": (10, 200)},
+    "Home": {"items": ["Sofa", "Coffee Table", "Blender", "Microwave", "Vacuum Cleaner", "Curtains", "Dining Table", "Chair", "Bed", "Lamp"], "price_range": (50, 1500)},
+    "Sports": {"items": ["Football", "Basketball", "Running Shoes", "Tennis Racket", "Dumbbells", "Yoga Mat", "Cycling Helmet", "Golf Club", "Badminton Shuttlecock", "Boxing Gloves"], "price_range": (15, 500)},
+    "Toys": {"items": ["Lego Set", "Remote Control Car", "Dollhouse", "Puzzle", "Board Game", "Action Figure", "Toy Train", "Stuffed Animal", "Rubik's Cube", "Water Gun"], "price_range": (5, 100)},
+    "Beauty": {"items": ["Lipstick", "Foundation", "Eyeliner", "Perfume", "Face Cream", "Shampoo", "Hair Dryer", "Nail Polish", "Sunscreen", "Makeup Brush Set"], "price_range": (5, 150)},
+    "Automotive": {"items": ["Car Battery", "Engine Oil", "Car Cover", "Jump Starter", "Tire Inflator", "Car Seat Cover", "Steering Wheel Cover", "GPS Navigator", "Dash Cam", "Car Vacuum Cleaner"], "price_range": (20, 500)},
+    "Books": {"items": ["Novel", "Science Fiction", "History Book", "Cookbook", "Self-Help Book", "Travel Guide", "Comic Book", "Biography", "Textbook", "Poetry Collection"], "price_range": (5, 50)},
+    "Groceries": {"items": ["Milk", "Eggs", "Bread", "Rice", "Pasta", "Cooking Oil", "Vegetables", "Fruits", "Cereal", "Juice"], "price_range": (1, 20)},
+    "Furniture": {"items": ["Wardrobe", "Bookshelf", "Desk", "Office Chair", "Dresser", "Nightstand", "TV Stand", "Shoe Rack", "Recliner", "Folding Table"], "price_range": (100, 2000)}
+}
+
+def weighted_product_selection():
+    if random.random() < 0.4:  # 40% chance to select a high-demand product
+        category = random.choice(high_demand_categories)
+    elif random.random() < 0.2:  # 20% chance for top books
+        category = "Books"
+        return random.choice(top_books)
+    else:  # 40% chance for other products
+        category = random.choice(list(category_products.keys()))
+    return random.choice(category_products[category]["items"])
+
+
+# Number of products # This block was moved from the "Generate Products Data" section
+n_products = 200
+product_ids = [f"P{str(i).zfill(4)}" for i in range(1, n_products+1)]
+
+order_product_names = [weighted_product_selection() for _ in range(n_orders)]
+order_product_ids = [random.choice(product_ids) for _ in range(n_orders)]
+
+# Assigning Customer IDs with 80% following a pattern
+#unique_customers = 50000  # Reduced customer base for repeated orders
+#customer_ids_for_orders = [f"C{str(i).zfill(5)}" for i in range(1, unique_customers+1)] # Renamed to avoid conflict
+#order_customer_ids = [random.choice(customer_ids_for_orders) for _ in range(n_orders)] # Use renamed variable
+order_customer_ids = [random.choice(customer_ids) for _ in range(n_orders)]
+
+
+
+# Assign quantities and prices
+quantities = np.random.randint(1, 11, n_orders)
+unit_prices = np.round(np.random.uniform(5, 500, n_orders), 2)
+total_prices = np.round(quantities * unit_prices, 2)
+
+# Introduce outliers (e.g., extremely high quantities or prices)
+outlier_indices = random.sample(range(n_orders), k=int(0.01 * n_orders))  # 1% outliers
+for idx in outlier_indices:
+    if random.random() < 0.5:
+        quantities[idx] = random.randint(50, 100)  # Unusually high quantity
+    else:
+        total_prices[idx] *= random.uniform(5, 10)  # Abnormally high total price
+
+# Introduce missing values in 2% of the dataset
+missing_indices = random.sample(range(n_orders), k=int(0.02 * n_orders))
+for idx in missing_indices:
+    if random.random() < 0.5:
+        order_product_ids[idx] = None  # Missing Product ID
+    else:
+        order_customer_ids[idx] = None  # Missing Customer ID
+
+# Assign regional distribution
+regions = [random.choice(["North", "South", "East", "West"]) for _ in range(n_orders)]
+
+# Create DataFrame
+orders_df = pd.DataFrame({
+    "OrderID": order_ids,
+    "CustomerID": order_customer_ids,
+    "OrderDate": [date.strftime("%Y-%m-%d") for date in order_dates],
+    "ProductID": order_product_ids,
+    "ProductName": order_product_names,
+    "Quantity": quantities,
+    "UnitPrice": unit_prices,
+    "TotalPrice": total_prices,
+    "Region": regions
+})
+
+# Save to CSV
+orders_csv = "orders.csv"
+orders_df.to_csv(orders_csv, index=False)
